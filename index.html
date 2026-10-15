@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Il mio catalogo</title>
+<title>projectbE</title>
 <meta name="description" content="Sfoglia i prodotti per categoria e richiedi informazioni con un tocco.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,7 +28,17 @@ a{color:inherit}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
 header{padding:56px 0 28px;text-align:center}
-header h1{font-size:clamp(2.2rem,6vw,3.8rem);font-weight:800;line-height:1.05;margin:0 0 12px;letter-spacing:-.02em}
+header h1{margin:0 0 12px;line-height:0}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+.print-title{width:100%;max-width:680px;display:block;margin:0 auto;overflow:visible}
+.print-title text{font-family:"Bricolage Grotesque",system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:800;font-size:120px;letter-spacing:-2px}
+.pt-fill{fill:var(--accent)}
+.pt-fill-lines{fill:url(#ptLines)}
+.pt-bed{fill:var(--muted)}
+.pt-beam{fill:var(--line)}
+.pt-head{fill:var(--ink)}
+.pt-glow{fill:#F2A33A}
 header p{margin:0 auto;max-width:52ch;color:var(--muted);font-size:1.1rem}
 
 .tools{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0;border-bottom:1px solid var(--line)}
@@ -61,7 +71,28 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 
 <header>
   <div class="wrap">
-    <h1>Stampe 3D</h1>
+    <h1>
+      <span class="sr-only">projectbE</span>
+      <svg class="print-title" id="printTitle" viewBox="0 0 800 260" aria-hidden="true">
+        <defs>
+          <clipPath id="ptClip"></clipPath>
+          <pattern id="ptLines" patternUnits="userSpaceOnUse" width="10" height="10">
+            <rect id="ptLine" x="0" y="0" width="10" height="1" fill="#000" fill-opacity=".28"/>
+          </pattern>
+        </defs>
+        <rect class="pt-bed" id="ptBed"/>
+        <g clip-path="url(#ptClip)">
+          <text class="pt-fill" id="ptFill" x="400" y="170" text-anchor="middle">projectbE</text>
+          <text class="pt-fill-lines" id="ptFillLines" x="400" y="170" text-anchor="middle">projectbE</text>
+        </g>
+        <g id="ptBeamG"><rect class="pt-beam" id="ptBeam" height="5" rx="2.5"/></g>
+        <g id="ptGantry">
+          <rect class="pt-head" x="-18" y="-22" width="36" height="22" rx="4"/>
+          <polygon class="pt-head" points="-7,0 7,0 2,12 -2,12"/>
+          <circle class="pt-glow" r="3" cx="0" cy="13"/>
+        </g>
+      </svg>
+    </h1>
     <p>Scegli una categoria o cerca una stampa in particolare.</p>
   </div>
 </header>
@@ -83,6 +114,88 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 </footer>
 
 <script>
+/* =====================================================
+   ANIMAZIONE TITOLO (stampa 3D strato dopo strato)
+   ===================================================== */
+(function(){
+  const svg = document.getElementById("printTitle"); if(!svg) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const fill = document.getElementById("ptFill");
+  const clipG = document.getElementById("ptClip");
+  const gantry = document.getElementById("ptGantry");
+  const beamG = document.getElementById("ptBeamG");
+  const beam = document.getElementById("ptBeam");
+  const bed = document.getElementById("ptBed");
+  const N = 44;                       // numero di strati
+  const BUILD = 5000 //HOLD = 5000;    // ms: durata stampa e pausa a titolo finito
+
+  function setup(){
+    const b = fill.getBBox();
+    const fs = parseFloat(getComputedStyle(fill).fontSize) || 120;
+    const base = parseFloat(fill.getAttribute("y"));
+    const x0 = b.x, w = b.width;
+    const top = base - fs*0.76;        // altezza delle lettere più alte (b)
+    const bottom = base + fs*0.22;     // profondità delle discendenti (p, j)
+    const H = (bottom-top)/N;
+
+    // piano di stampa
+    bed.setAttribute("x", x0-24); bed.setAttribute("width", w+48);
+    bed.setAttribute("y", bottom+2); bed.setAttribute("height", 10); bed.setAttribute("rx", 4);
+
+    // binario orizzontale
+    beam.setAttribute("x", x0-24); beam.setAttribute("width", w+48);
+
+    // righe sottili che simulano gli strati
+    const pat = document.getElementById("ptLines");
+    pat.setAttribute("height", H); pat.setAttribute("y", bottom);
+    document.getElementById("ptLine").setAttribute("height", Math.min(1.2, H/3));
+
+    // un rettangolo di clip per ogni strato
+    const rects = [];
+    for(let i=0;i<N;i++){
+      const r = document.createElementNS(NS,"rect");
+      r.setAttribute("y", bottom-(i+1)*H);
+      r.setAttribute("height", H+0.6);
+      clipG.appendChild(r); rects.push(r);
+    }
+
+    function draw(layer, f){
+      for(let i=0;i<N;i++){
+        const vis = i < layer ? w : (i === layer ? w*f : 0);
+        const right = i%2===0;
+        rects[i].setAttribute("width", Math.max(vis,0));
+        rects[i].setAttribute("x", right ? x0 : x0+w-vis);
+      }
+      if(layer>=N){ gantry.style.opacity=0; beamG.style.opacity=0; return; }
+      const right = layer%2===0;
+      const x = right ? x0+w*f : x0+w-w*f;
+      const y = bottom-(layer+1)*H;
+      gantry.style.opacity=1; beamG.style.opacity=1;
+      gantry.setAttribute("transform",`translate(${x},${y-12})`);
+      beamG.setAttribute("transform",`translate(0,${y-12-22+8})`);
+    }
+
+    if(window.matchMedia("(prefers-reduced-motion: reduce)").matches){ draw(N,0); return; }
+
+    let t0=null;
+    function frame(ts){
+      if(t0===null) t0=ts;
+      const t=ts-t0;
+      if(t>=BUILD){ draw(N,0); return; }   // stampa finita: si ferma qui
+      const p=t/BUILD*N, l=Math.floor(p);
+  draw(l,p-l);
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  // aspetta il caricamento del font, altrimenti le misure del testo sono sbagliate
+  const fontPronto = document.fonts && document.fonts.load
+    ? document.fonts.load('800 120px "Bricolage Grotesque"', 'projectbE')
+    : Promise.resolve();
+  fontPronto.catch(()=>{}).then(()=> document.fonts ? document.fonts.ready : null).then(setup);
+})();
+
 /* =====================================================
    1) MODIFICA QUI I TUOI DATI DI CONTATTO
    ===================================================== */
