@@ -15,7 +15,7 @@
   --ink: #f4f4f8;       /* Bianco caldo */
   --muted: #a5a1b8;     /* Lavanda desaturato */
   --line: #2d264a;      /* Bordo tono su tono */
-  --accent: #06b6d4;    /* Ciano brillante ad alto contrasto */
+  --accent: #06d49a;    
   --accent-ink: #000000;
   --soft: #231d3d;      /* Sfondo placeholder */
 }
@@ -65,6 +65,38 @@ header p{margin:0 auto;max-width:52ch;color:var(--muted);font-size:1.1rem}
 .empty{grid-column:1/-1;padding:40px 0;color:var(--muted)}
 
 footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);font-size:.95rem}
+/* --- Animazione Lift & Shadow pulsanti --- */
+.card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+/* Sollevamento più marcato per le carte prodotto */
+.card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(255, 0, 0, 0.6);
+}
+
+/* --- Animazione Sottolineatura da sinistra per le Categorie --- */
+.chip {
+  position: relative; /* Necessario per agganciare la linea animata al bottone */
+  overflow: hidden; /* Fondamentale: fa sì che la linea non esca fuori dai bordi arrotondati */
+}
+/* Creiamo la linea nascosta alla base del bottone */
+.chip::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px; /* Spessore della sottolineatura */
+  background-color: var(--accent); /* Colore ciano brillante */
+  transform: scaleX(0); /* Inizialmente la larghezza è 0 */
+  transform-origin: left; /* Imposta l'origine dell'animazione a sinistra */
+  transition: transform 0.3s ease; /* Durata dell'animazione */
+}
+/* Al passaggio del mouse, la linea si estende al 100% */
+.chip:hover::after {
+  transform: scaleX(1);
+}
 </style>
 </head>
 <body>
@@ -243,9 +275,13 @@ function linkEmail(p){
 
 function disegna(){
   const q = $("q").value.trim().toLowerCase();
+  
+  // Filtriamo la lista e aggiungiamo l'ordinamento alfabetico per categoria
   const lista = Stampe.filter(p =>
     (categoria === "Tutti" || p.categoria === categoria) &&
-    (!q || (p.nome + " " + p.descrizione + " " + p.categoria).toLowerCase().includes(q)));
+    (!q || (p.nome + " " + p.descrizione + " " + p.categoria).toLowerCase().includes(q))
+  ).sort((a, b) => a.categoria.localeCompare(b.categoria)); // <-- RIGA AGGIUNTA
+
   $("count").textContent = lista.length === 1 ? "1 prodotto" : lista.length + " prodotti";
   $("grid").innerHTML = lista.length ? lista.map(p => `
     <article class="card">
