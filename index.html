@@ -9,9 +9,15 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;600;800&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#05010e; --card:#260247; --ink:#18222B; --muted:#5B6874;
-  --line:#a8aaab; --accent:#0E6B6B; --accent-ink:#FFFFFF; --soft:#251f65;
+:root {
+  --bg: #0d0b18;        /* Viola scurissimo quasi nero */
+  --card: #18142a;      /* Viola scuro profondo */
+  --ink: #f4f4f8;       /* Bianco caldo */
+  --muted: #a5a1b8;     /* Lavanda desaturato */
+  --line: #2d264a;      /* Bordo tono su tono */
+  --accent: #06b6d4;    /* Ciano brillante ad alto contrasto */
+  --accent-ink: #000000;
+  --soft: #231d3d;      /* Sfondo placeholder */
 }
 *{box-sizing:border-box}
 html{scroll-behavior:smooth}
@@ -21,9 +27,9 @@ a{color:inherit}
 :focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .wrap{max-width:1080px;margin:0 auto;padding:0 20px}
 
-header{padding:56px 0 28px}
+header{padding:56px 0 28px;text-align:center}
 header h1{font-size:clamp(2.2rem,6vw,3.8rem);font-weight:800;line-height:1.05;margin:0 0 12px;letter-spacing:-.02em}
-header p{margin:0;max-width:52ch;color:var(--muted);font-size:1.1rem}
+header p{margin:0 auto;max-width:52ch;color:var(--muted);font-size:1.1rem}
 
 .tools{position:sticky;top:0;z-index:5;background:var(--bg);padding:14px 0;border-bottom:1px solid var(--line)}
 .search{width:100%;padding:13px 16px;font:inherit;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink)}
@@ -55,14 +61,14 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 
 <header>
   <div class="wrap">
-    <h1>Il mio catalogo</h1>
-    <p>Scegli una categoria o cerca un prodotto. Quando ne trovi uno che ti interessa, toccando il pulsante mi arriva subito un messaggio.</p>
+    <h1>Stampe 3D</h1>
+    <p>Scegli una categoria o cerca una stampa in particolare.</p>
   </div>
 </header>
 
 <div class="tools">
   <div class="wrap">
-    <input class="search" id="q" type="search" placeholder="Cerca un prodotto" aria-label="Cerca un prodotto">
+    <input class="search" id="q" type="search" placeholder="Cerca una stampa" aria-label="Cerca una stampa">
     <div class="chips" id="chips" role="group" aria-label="Categorie"></div>
   </div>
 </div>
@@ -81,9 +87,9 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
    1) MODIFICA QUI I TUOI DATI DI CONTATTO
    ===================================================== */
 const CONTATTI = {
-  nome: "Il mio negozio",
-  whatsapp: "393331234567",      // prefisso + numero, senza + né spazi (39 = Italia)
-  email: "info@iltuodominio.it"
+  nome: "FFLab",
+  whatsapp: "393494503458",      // prefisso + numero, senza + né spazi (39 = Italia)
+  email: "filippofilipi2004@gmail.com"
 };
 
 /* =====================================================
@@ -92,7 +98,7 @@ const CONTATTI = {
    - foto: nome del file caricato nella cartella "foto" (es. "foto/lampada.jpg").
            Lascia "" per mostrare un segnaposto.
    ===================================================== */
-const PRODOTTI = [
+const Stampe = [
   { nome: "Prodotto di esempio 1", categoria: "Categoria A", prezzo: "€ 25", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
   { nome: "Prodotto di esempio 2", categoria: "Categoria A", prezzo: "€ 40", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
   { nome: "Prodotto di esempio 3", categoria: "Categoria B", prezzo: "€ 15", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
@@ -101,14 +107,11 @@ const PRODOTTI = [
   { nome: "Prodotto di esempio 6", categoria: "Categoria C", prezzo: "Su richiesta", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." }
 ];
 
-/* =====================================================
-   Da qui in giù non serve cambiare nulla
-   ===================================================== */
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let categoria = "Tutti";
 
-const categorie = ["Tutti", ...new Set(PRODOTTI.map(p => p.categoria))];
+const categorie = ["Tutti", ...new Set(Stampe.map(p => p.categoria))];
 
 function disegnaChips(){
   $("chips").innerHTML = categorie.map(c =>
@@ -127,7 +130,7 @@ function linkEmail(p){
 
 function disegna(){
   const q = $("q").value.trim().toLowerCase();
-  const lista = PRODOTTI.filter(p =>
+  const lista = Stampe.filter(p =>
     (categoria === "Tutti" || p.categoria === categoria) &&
     (!q || (p.nome + " " + p.descrizione + " " + p.categoria).toLowerCase().includes(q)));
   $("count").textContent = lista.length === 1 ? "1 prodotto" : lista.length + " prodotti";

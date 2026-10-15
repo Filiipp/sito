@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Animazione stampa 3D</title>
+<style>
+/* ===== 1) CSS: incollalo nel tuo <style> ===== */
+:root{
+  --ink:#18222B; --line:#DCE3E8; --accent:#0E6B6B;
+}
+.printer{width:100%;max-width:380px;display:block;margin:0 auto}
+.printer .bed{fill:var(--ink)}
+.printer .rail{fill:var(--line)}
+.printer .head{fill:var(--ink)}
+.printer .layer{fill:var(--accent)}
+.printer .layer.alt{fill:#0B5656}
+.printer .glow{fill:#F2A33A}
+
+/* solo per questa pagina di prova */
+body{margin:0;min-height:100vh;display:grid;place-items:center;background:#F5F7F8}
+</style>
+</head>
+<body>
+
+<!-- ===== 2) HTML: incollalo dove vuoi che appaia l'animazione ===== -->
+<svg class="printer" id="printer" viewBox="0 0 400 320" role="img" aria-label="Animazione: un oggetto viene stampato in 3D strato dopo strato">
+  <rect class="rail" x="40" y="14" width="320" height="8" rx="4"/>
+  <rect class="bed" x="40" y="272" width="320" height="14" rx="4"/>
+  <g id="layers"></g>
+  <g id="gantry">
+    <rect class="head" id="carriage" x="-18" y="-22" width="36" height="22" rx="4"/>
+    <polygon class="head" id="nozzle" points="-7,0 7,0 2,12 -2,12"/>
+    <circle class="glow" id="spark" r="3" cx="0" cy="13"/>
+  </g>
+</svg>
+
+<!-- ===== 3) JavaScript: incollalo prima di </body> ===== -->
+<script>
+(function(){
+  const svg = document.getElementById("printer"); if(!svg) return;
+  const NS = "http://www.w3.org/2000/svg";
+  const layersG = document.getElementById("layers");
+  const gantry = document.getElementById("gantry");
+  const N = 48, H = 4.6, BASE = 272, CX = 200;   // N = numero di strati, H = altezza strato
+
+  // Forma dell'oggetto: larghezza di ogni strato (qui un vaso). Cambiala per ottenere altre forme.
+  const width = i => { const t = i/(N-1);
+    return 70 + 46*Math.sin(t*Math.PI*0.95) - 26*t + 10*Math.sin(t*Math.PI*6)*(1-t); };
+
+  const rects = [];
+  for(let i=0;i<N;i++){
+    const r = document.createElementNS(NS,"rect");
+    r.setAttribute("class","layer"+(i%2?" alt":""));
+    r.setAttribute("height",H+0.4);
+    r.setAttribute("y",BASE-(i+1)*H);
+    r.setAttribute("rx",1.2);
+    layersG.appendChild(r); rects.push(r);
+  }
+
+  function draw(layer, f){
+    // layer = strato in corso, f = avanzamento 0..1 dentro lo strato
+    for(let i=0;i<N;i++){
+      const w = width(i);
+      let vis = i < layer ? w : (i === layer ? w*f : 0);
+      const dirRight = i%2===0;
+      rects[i].setAttribute("width", Math.max(vis,0));
+      rects[i].setAttribute("x", dirRight ? CX-w/2 : CX+w/2-vis);
+    }
+    if(layer>=N){ gantry.style.opacity=0; return; }
+    const w = width(layer), dirRight = layer%2===0;
+    const x = dirRight ? CX-w/2+w*f : CX+w/2-w*f;
+    const y = BASE-(layer+1)*H;
+    gantry.style.opacity=1;
+    gantry.setAttribute("transform",`translate(${x},${y-12})`);
+  }
+
+  // Se il dispositivo ha "riduci animazioni", mostra l'oggetto già finito
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if(reduce){ draw(N,0); return; }
+
+  const BUILD = 9000, HOLD = 2200;   // millisecondi: durata stampa e pausa a oggetto finito
+  let t0 = null;
+  function frame(ts){
+    if(t0===null) t0 = ts;
+    const t = (ts-t0) % (BUILD+HOLD);
+    if(t >= BUILD){ draw(N,0); }
+    else{
+      const p = t/BUILD*N, layer = Math.floor(p);
+      draw(layer, p-layer);
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
