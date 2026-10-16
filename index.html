@@ -55,7 +55,11 @@ header p{margin:0 auto;max-width:52ch;color:var(--muted);font-size:1.1rem}
 .body{padding:16px;display:flex;flex-direction:column;gap:6px;flex:1}
 .cat{font-size:.85rem;color:var(--muted)}
 .body h3{margin:0;font-size:1.2rem}
-.body p{margin:0;color:var(--muted);font-size:.95rem;flex:1}
+.body p{display: -webkit-box;
+  -webkit-line-clamp: 4; /* Mostra solo 2 righe prima dei "..." */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  white-space: pre-line;margin:0;color:var(--muted);font-size:.95rem;flex:1}
 .price{font-weight:800;font-size:1.15rem;margin-top:6px}
 .actions{display:flex;gap:8px;margin-top:10px}
 .btn{flex:1;text-align:center;text-decoration:none;font-weight:600;padding:10px 12px;border-radius:9px;border:1px solid var(--accent)}
@@ -171,6 +175,43 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 }
 .category-header:first-child {
   margin-top: 0; /* Rimuove lo spazio extra per la primissima categoria */
+}
+/* --- Modal (Grow) e Galleria Foto --- */
+.modal { 
+  display: none; 
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0,0,0,0.8); 
+  z-index: 100; /* Alzato per coprire l'header sticky */
+  place-items: center; 
+  padding: 20px; 
+}
+.modal-content { 
+  background: var(--card); 
+  padding: 20px; 
+  border-radius: 14px; 
+  width: 100%; 
+  max-width: 500px; 
+  animation: grow 0.3s ease; 
+}
+@keyframes grow { 
+  from { transform: scale(0.8); opacity: 0; } 
+  to { transform: scale(1); opacity: 1; } 
+}
+.gallery { 
+  display: flex; 
+  overflow-x: auto; 
+  scroll-snap-type: x mandatory; 
+  gap: 10px; 
+  margin-bottom: 15px; 
+}
+.gallery img { 
+  width: 100%; 
+  flex-shrink: 0; 
+  scroll-snap-align: center; 
+  border-radius: 8px; 
+  aspect-ratio: 4/3; 
+  object-fit: cover; 
 }
 </style>
 </head>
@@ -322,17 +363,14 @@ const CONTATTI = {
            Lascia "" per mostrare un segnaposto.
    ===================================================== */
 const Stampe = [
-  { nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: "", descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato.\n Può avere un rivestimento opaco o in resina." },
-  { nome: "Prodotto di esempio 2", categoria: "Categoria A", prezzo: "€ 40", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
-  { nome: "Prodotto di esempio 3", categoria: "Categoria B", prezzo: "€ 15", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
-  { nome: "Prodotto di esempio 4", categoria: "Categoria B", prezzo: "€ 60", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
-  { nome: "Prodotto di esempio 5", categoria: "Categoria C", prezzo: "€ 90", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
-  { nome: "Prodotto di esempio 6", categoria: "Categoria C", prezzo: "Su richiesta", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." }
+  { nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: [""], descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato. Può avere un rivestimento opaco o in resina." },
+ 
 ];
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 let categoria = "Tutti";
+let prodottiCorrenti = [];
 
 const categorie = ["Tutti", ...new Set(Stampe.map(p => p.categoria))];
 
@@ -359,19 +397,29 @@ function disegna(){
     (!q || (p.nome + " " + p.descrizione + " " + p.categoria).toLowerCase().includes(q))
   ).sort((a, b) => a.categoria.localeCompare(b.categoria));
 
+  // SALVA LA LISTA ATTUALE PER IL MODAL
+  prodottiCorrenti = lista;
+
   $("count").textContent = lista.length === 1 ? "1 prodotto" : lista.length + " prodotti";
   
   $("grid").innerHTML = lista.length ? lista.map((p, i, arr) => {
     let html = "";
     
-    // Se siamo in "Tutti", inserisce l'intestazione se è il primo elemento o se la categoria cambia
     if (categoria === "Tutti" && (i === 0 || p.categoria !== arr[i-1].categoria)) {
       html += `<div class="category-header">${esc(p.categoria)}</div>`;
     }
     
+    // Controlliamo la prima foto da mostrare nella card (gestendo se è un array o no)
+    let primaFoto = "";
+    if (Array.isArray(p.foto) && p.foto.length > 0) primaFoto = p.foto[0];
+    else if (typeof p.foto === "string") primaFoto = p.foto;
+
     html += `
       <article class="card">
-        <div class="photo">${p.foto ? `<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy">` : esc(p.nome.charAt(0))}</div>
+        <!-- AGGIUNTO L'ONCLICK PER APRIRE IL MODAL -->
+        <div class="photo" onclick="apriModal(${i})" style="cursor:pointer">
+          ${primaFoto ? `<img src="${esc(primaFoto)}" alt="${esc(p.nome)}" loading="lazy">` : esc(p.nome.charAt(0))}
+        </div>
         <div class="body">
           <span class="cat">${esc(p.categoria)}</span>
           <h3>${esc(p.nome)}</h3>
@@ -394,6 +442,10 @@ $("chips").addEventListener("click", e => {
 });
 const qInput = $("q");
 const suggestionsBox = $("suggestions");
+suggestionsBox.addEventListener("click", e => {
+  const it = e.target.closest(".suggestion-item"); if(!it) return;
+  selezionaSuggerimento(it.dataset.nome);
+});
 
 qInput.addEventListener("input", (e) => {
   const q = e.target.value.trim().toLowerCase();
@@ -413,10 +465,10 @@ qInput.addEventListener("input", (e) => {
   if (suggeriti.length > 0) {
     // Disegna la lista dei suggerimenti
     suggestionsBox.innerHTML = suggeriti.map(p => `
-      <div class="suggestion-item" onclick="selezionaSuggerimento('${esc(p.nome)}')">
-        <span class="s-name">${esc(p.nome)}</span>
-        <span class="s-cat">${esc(p.categoria)}</span>
-      </div>
+       <div class="suggestion-item" data-nome="${esc(p.nome)}">
+    <span class="s-name">${esc(p.nome)}</span>
+    <span class="s-cat">${esc(p.categoria)}</span>
+  </div>
     `).join("");
     suggestionsBox.classList.add("active");
   } else {
@@ -443,6 +495,34 @@ $("foot").innerHTML = `<strong>${esc(CONTATTI.nome)}</strong><br>
   <a href="mailto:${esc(CONTATTI.email)}">${esc(CONTATTI.email)}</a>`;
 
 disegnaChips(); disegna();
+/* --- Gestione Finestra Modal (Grow) --- */
+
+function apriModal(indice) {
+  const p = prodottiCorrenti[indice];
+  if (!p) return;
+  
+  const gallery = document.getElementById("modal-gallery");
+  
+  // Crea le immagini controllando se l'array foto esiste o se è una stringa singola
+  if (Array.isArray(p.foto) && p.foto.length > 0) {
+    gallery.innerHTML = p.foto.map(f => `<img src="${esc(f)}">`).join('');
+  } else if (typeof p.foto === "string" && p.foto.trim() !== "") {
+    gallery.innerHTML = `<img src="${esc(p.foto)}">`;
+  } else {
+    // Se non ci sono foto, non mostra nulla (o potresti rimettere il segnaposto)
+    gallery.innerHTML = '';
+  }
+  
+  // Usa la descrizione_lunga se esiste, altrimenti usa quella normale
+  document.getElementById("modal-desc").textContent = p.descrizione_lunga || p.descrizione;
+  document.getElementById("modal").style.display = "grid";
+}
 </script>
+<div id="modal" class="modal" onclick="this.style.display='none'">
+  <div class="modal-content" onclick="event.stopPropagation()">
+    <div id="modal-gallery" class="gallery"></div>
+    <p id="modal-desc"></p>
+  </div>
+</div>
 </body>
 </html>
