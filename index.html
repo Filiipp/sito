@@ -213,6 +213,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
   aspect-ratio: 4/3; 
   object-fit: cover; 
 }
+#modal-desc{white-space:pre-line;color:var(--muted);margin:0}
 </style>
 </head>
 <body>
@@ -357,14 +358,13 @@ const CONTATTI = {
 };
 
 /* =====================================================
-   2) MODIFICA QUI I TUOI PRODOTTI
+   2) MODIFICA QUI I TUOI stampe aggiungi
    - categoria: usa sempre lo stesso nome per i prodotti dello stesso gruppo
    - foto: nome del file caricato nella cartella "foto" (es. "foto/lampada.jpg").
            Lascia "" per mostrare un segnaposto.
    ===================================================== */
 const Stampe = [
-  { nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: [""], descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato. Può avere un rivestimento opaco o in resina." },
- 
+  { nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: ["immagini_stampe/portachivi_bbunny.jpg","immagini_stampe/spoty.jpg"], descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato. Può avere un rivestimento opaco o in resina." },
 ];
 
 const $ = id => document.getElementById(id);
@@ -500,20 +500,14 @@ disegnaChips(); disegna();
 function apriModal(indice) {
   const p = prodottiCorrenti[indice];
   if (!p) return;
-  
+
   const gallery = document.getElementById("modal-gallery");
-  
-  // Crea le immagini controllando se l'array foto esiste o se è una stringa singola
-  if (Array.isArray(p.foto) && p.foto.length > 0) {
-    gallery.innerHTML = p.foto.map(f => `<img src="${esc(f)}">`).join('');
-  } else if (typeof p.foto === "string" && p.foto.trim() !== "") {
-    gallery.innerHTML = `<img src="${esc(p.foto)}">`;
-  } else {
-    // Se non ci sono foto, non mostra nulla (o potresti rimettere il segnaposto)
-    gallery.innerHTML = '';
-  }
-  
-  // Usa la descrizione_lunga se esiste, altrimenti usa quella normale
+
+  // Normalizza p.foto in un array, filtra i valori vuoti e genera l'HTML
+  const foto = (Array.isArray(p.foto) ? p.foto : [p.foto]).filter(f => f && f.trim());
+  gallery.innerHTML = foto.map(f => `<img src="${esc(f)}" alt="${esc(p.nome)}">`).join("");
+
+  // Descrizione e apertura del modal (queste due righe mancavano)
   document.getElementById("modal-desc").textContent = p.descrizione_lunga || p.descrizione;
   document.getElementById("modal").style.display = "grid";
 }
