@@ -97,6 +97,81 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 .chip:hover::after {
   transform: scaleX(1);
 }
+/* --- Autocomplete Suggerimenti --- */
+.search-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions {
+  position: absolute;
+  top: calc(100% + 6px); /* Distanza di 6px sotto la barra */
+  left: 0;
+  right: 0;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  z-index: 10;
+  max-height: 250px;
+  overflow-y: auto;
+  display: none; /* Nascosto di default */
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+.suggestions.active {
+  display: block; /* Mostra la tendina quando ci sono suggerimenti */
+}
+
+.suggestion-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background 0.2s;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background: var(--soft); /* Illumina la riga al passaggio del mouse */
+}
+
+.suggestion-item .s-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.suggestion-item .s-cat {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+/* --- Intestazioni di Categoria --- */
+.category-header {
+  grid-column: 1 / -1; /* Fa espandere il testo su tutte le colonne della griglia */
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--ink);
+  padding-bottom: 8px;
+  margin-top: 24px;
+  position: relative;
+}
+.category-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0; /* Allinea la linea a sinistra */
+  width: 80px; /* Modifica qui la lunghezza */
+  height: 4px; 
+  background-color: var(--accent); 
+  border-radius: 2px; 
+}
+.category-header:first-child {
+  margin-top: 0; /* Rimuove lo spazio extra per la primissima categoria */
+}
 </style>
 </head>
 <body>
@@ -131,8 +206,11 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 
 <div class="tools">
   <div class="wrap">
-    <input class="search" id="q" type="search" placeholder="Cerca una stampa" aria-label="Cerca una stampa">
-    <div class="chips" id="chips" role="group" aria-label="Categorie"></div>
+    <div class="search-wrap">
+  <input class="search" id="q" type="search" placeholder="Cerca una stampa" aria-label="Cerca una stampa" autocomplete="off">
+  <div id="suggestions" class="suggestions"></div>
+</div>
+<div class="chips" id="chips" role="group" aria-label="Categorie"></div>
   </div>
 </div>
 
@@ -244,7 +322,7 @@ const CONTATTI = {
            Lascia "" per mostrare un segnaposto.
    ===================================================== */
 const Stampe = [
-  { nome: "Prodotto di esempio 1", categoria: "Categoria A", prezzo: "€ 25", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
+  { nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: "", descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato.\n Può avere un rivestimento opaco o in resina." },
   { nome: "Prodotto di esempio 2", categoria: "Categoria A", prezzo: "€ 40", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
   { nome: "Prodotto di esempio 3", categoria: "Categoria B", prezzo: "€ 15", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
   { nome: "Prodotto di esempio 4", categoria: "Categoria B", prezzo: "€ 60", foto: "", descrizione: "Breve descrizione del prodotto: materiali, misure, utilizzo." },
@@ -276,35 +354,89 @@ function linkEmail(p){
 function disegna(){
   const q = $("q").value.trim().toLowerCase();
   
-  // Filtriamo la lista e aggiungiamo l'ordinamento alfabetico per categoria
   const lista = Stampe.filter(p =>
     (categoria === "Tutti" || p.categoria === categoria) &&
     (!q || (p.nome + " " + p.descrizione + " " + p.categoria).toLowerCase().includes(q))
-  ).sort((a, b) => a.categoria.localeCompare(b.categoria)); // <-- RIGA AGGIUNTA
+  ).sort((a, b) => a.categoria.localeCompare(b.categoria));
 
   $("count").textContent = lista.length === 1 ? "1 prodotto" : lista.length + " prodotti";
-  $("grid").innerHTML = lista.length ? lista.map(p => `
-    <article class="card">
-      <div class="photo">${p.foto ? `<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy">` : esc(p.nome.charAt(0))}</div>
-      <div class="body">
-        <span class="cat">${esc(p.categoria)}</span>
-        <h3>${esc(p.nome)}</h3>
-        <p>${esc(p.descrizione)}</p>
-        <div class="price">${esc(p.prezzo)}</div>
-        <div class="actions">
-          <a class="btn primary" href="${linkWhatsApp(p)}" target="_blank" rel="noopener">WhatsApp</a>
-          <a class="btn ghost" href="${linkEmail(p)}">Email</a>
+  
+  $("grid").innerHTML = lista.length ? lista.map((p, i, arr) => {
+    let html = "";
+    
+    // Se siamo in "Tutti", inserisce l'intestazione se è il primo elemento o se la categoria cambia
+    if (categoria === "Tutti" && (i === 0 || p.categoria !== arr[i-1].categoria)) {
+      html += `<div class="category-header">${esc(p.categoria)}</div>`;
+    }
+    
+    html += `
+      <article class="card">
+        <div class="photo">${p.foto ? `<img src="${esc(p.foto)}" alt="${esc(p.nome)}" loading="lazy">` : esc(p.nome.charAt(0))}</div>
+        <div class="body">
+          <span class="cat">${esc(p.categoria)}</span>
+          <h3>${esc(p.nome)}</h3>
+          <p>${esc(p.descrizione)}</p>
+          <div class="price">${esc(p.prezzo)}</div>
+          <div class="actions">
+            <a class="btn primary" href="${linkWhatsApp(p)}" target="_blank" rel="noopener">WhatsApp</a>
+            <a class="btn ghost" href="${linkEmail(p)}">Email</a>
+          </div>
         </div>
-      </div>
-    </article>`).join("")
-    : `<p class="empty">Nessun prodotto trovato. Prova con un'altra parola o categoria.</p>`;
+      </article>`;
+    return html;
+  }).join("")
+  : `<p class="empty">Nessun prodotto trovato. Prova con un'altra parola o categoria.</p>`;
 }
 
 $("chips").addEventListener("click", e => {
   const b = e.target.closest(".chip"); if(!b) return;
   categoria = b.dataset.c; disegnaChips(); disegna();
 });
-$("q").addEventListener("input", disegna);
+const qInput = $("q");
+const suggestionsBox = $("suggestions");
+
+qInput.addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  disegna(); // Aggiorna comunque la griglia principale sotto
+  
+  if (!q) {
+    suggestionsBox.classList.remove("active");
+    return;
+  }
+
+  // Cerca i prodotti corrispondenti (mostriamo massimo 5 suggerimenti)
+  const suggeriti = Stampe.filter(p => 
+    p.nome.toLowerCase().includes(q) || 
+    p.categoria.toLowerCase().includes(q)
+  ).slice(0, 5);
+
+  if (suggeriti.length > 0) {
+    // Disegna la lista dei suggerimenti
+    suggestionsBox.innerHTML = suggeriti.map(p => `
+      <div class="suggestion-item" onclick="selezionaSuggerimento('${esc(p.nome)}')">
+        <span class="s-name">${esc(p.nome)}</span>
+        <span class="s-cat">${esc(p.categoria)}</span>
+      </div>
+    `).join("");
+    suggestionsBox.classList.add("active");
+  } else {
+    suggestionsBox.classList.remove("active");
+  }
+});
+
+// Funzione chiamata quando clicchi su un suggerimento
+window.selezionaSuggerimento = function(nome) {
+  qInput.value = nome; // Inserisce il nome nella barra
+  suggestionsBox.classList.remove("active"); // Chiude la tendina
+  disegna(); // Filtra la griglia mostrando solo quel prodotto
+};
+
+// Se clicchi fuori dalla barra o dalla tendina, nasconde i suggerimenti
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".search-wrap")) {
+    suggestionsBox.classList.remove("active");
+  }
+});
 
 $("foot").innerHTML = `<strong>${esc(CONTATTI.nome)}</strong><br>
   <a href="https://wa.me/${CONTATTI.whatsapp}" target="_blank" rel="noopener">WhatsApp</a> ·
