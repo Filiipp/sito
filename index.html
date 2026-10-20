@@ -76,7 +76,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 /* Sollevamento più marcato per le carte prodotto */
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 12px 24px rgba(255, 0, 0, 0.6);
+  box-shadow: 0 12px 24px rgba(250, 249, 249, 0.6);
 }
 
 /* --- Animazione Sottolineatura da sinistra per le Categorie --- */
@@ -205,15 +205,51 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
   gap: 10px; 
   margin-bottom: 15px; 
 }
-.gallery img { 
-  width: 100%; 
-  flex-shrink: 0; 
-  scroll-snap-align: center; 
-  border-radius: 8px; 
-  aspect-ratio: 4/3; 
-  object-fit: cover; 
+.gallery img {
+  width: 100%;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  border-radius: 8px;
+  aspect-ratio: 4/3;
+  object-fit: contain; /* Risolve il problema del taglio forzato */
+  background: var(--soft); /* Mantiene un colore di fondo omogeneo se l'immagine ha proporzioni diverse */
 }
 #modal-desc{white-space:pre-line;color:var(--muted);margin:0}
+.gallery-wrapper {
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--card);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+  transition: background 0.2s, color 0.2s;
+}
+
+.nav-btn:hover {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.nav-btn.left { left: -10px; }
+.nav-btn.right { right: -10px; }
+
+/* Nascondiamo la barra di scorrimento nativa per un design più pulito */
+.gallery::-webkit-scrollbar { display: none; }
+.gallery { -ms-overflow-style: none; scrollbar-width: none; margin-bottom: 0; }
 </style>
 </head>
 <body>
@@ -364,23 +400,37 @@ const CONTATTI = {
            Lascia "" per mostrare un segnaposto.
    ===================================================== */
 const Stampe = [
-  {  /*{nome: "", categoria: "", prezzo: "€ ", foto: ["",""], descrizione: "" },*/
-    nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: ["immagini_stampe/spoty.jpg","immagini_stampe/portachivi_bbunny.jpg"], descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato. Può avere un rivestimento opaco o in resina." },
-      {nome: "Box modulare", categoria: "Fai fa te", prezzo: "€... ", foto: ["immagini_stampe/bbox.jpg"], descrizione: "" },
-        {nome: "Bracciali bangle", categoria: "Accessori", prezzo: "€ 1", foto: ["immagini_stampe/bracciali.jpg","immagini_stampe/braccialeargento.jpg"], descrizione: "" },
-        {nome: "Disegno1", categoria: "Disegni", prezzo: "€ ...", foto: ["immagini_stampe/dis1.jpg","immagini_stampe/dis2.png"], descrizione: "" },
-        {nome: "Sdentato", categoria: "Portachiavi", prezzo: "€ 2,50", foto: ["immagini_stampe/dragon.jpg","immagini_stampe/dragon2.jpg"], descrizione: "" },
-        {nome: "Gengar", categoria: "Action figure", prezzo: "€ ...", foto: ["immagini_stampe/gengar.jpg",""], descrizione: "" },
-        {nome: "Orecchini", categoria: "Accessori", prezzo: "€ ...", foto: ["immagini_stampe/orecchini.jpg",""], descrizione: "" },
-        {nome: "Pokeball", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/pokeball.jpg","immagini_stampe/poke.jpg"], descrizione: "" },
-        {nome: "Pole Dance", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/poledance.jpg",""], descrizione: "" },
-        {nome: "Snorlax", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/snorlax.jpg",""], descrizione: "" },
-        {nome: "Tartaruga", categoria: "Portachiavi", prezzo: "€ ", foto: ["immagini_stampe/tartaruag.jpg",""], descrizione: "" },
-        {nome: "Porta carta igienica", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/portacartaigienica.jpg",""], descrizione: "" },
-        {nome: "Porta uova", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/portauova.png",""], descrizione: "" },
-        {nome: "Vinile", categoria: "Altro", prezzo: "€ ", foto: ["immagini_stampe/vinile.jpg",""], descrizione: "" },
-        {nome: "Porta scopa", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/scopa.jpg",""], descrizione: "" },
-      ];
+  /*{nome: "", categoria: "", prezzo: "€ ", foto: ["",""], descrizione: "" },*/
+  /* portachiavi*/
+  {nome: "Portachiavi Spotify", categoria: "Portachiavi", prezzo: "€ 2,50", foto: ["immagini_stampe/spoty.jpg","immagini_stampe/portachivi_bbunny.jpg"], descrizione: "Portachiavi con l'immagine di Spotify o di un album musicale, all'interno è presente un chip nfc grazie al quale è possibile, avvicinando lo smartphone, aprire direttamente il brano/album desiderato. Può avere un rivestimento opaco o in resina." },
+  /* accessori*/
+  {nome: "Bracciali bangle", categoria: "Accessori", prezzo: "€ 1", foto: ["immagini_stampe/bracciali.jpg","immagini_stampe/braccialeargento.jpg"], descrizione: "" },
+  {nome: "Orecchini", categoria: "Accessori", prezzo: "€ ...", foto: ["immagini_stampe/orecchini.jpg",""], descrizione: "" },
+     
+  /* action figure*/
+  {nome: "Sdentato", categoria: "Portachiavi", prezzo: "€ 2,50", foto: ["immagini_stampe/dragon.jpg","immagini_stampe/dragon2.jpg"], descrizione: "" },
+  {nome: "Gengar", categoria: "Action figure", prezzo: "€ ...", foto: ["immagini_stampe/gengar.jpg",""], descrizione: "" },
+  {nome: "Pokeball", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/pokeball.jpg","immagini_stampe/poke.jpg"], descrizione: "" },
+  {nome: "Pole Dance", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/poledance.jpg",""], descrizione: "" },
+  {nome: "Snorlax", categoria: "Action figure", prezzo: "€ ", foto: ["immagini_stampe/snorlax.jpg",""], descrizione: "" },
+  {nome: "Tartaruga", categoria: "Portachiavi", prezzo: "€ ", foto: ["immagini_stampe/tartaruag.jpg",""], descrizione: "" },
+          
+  /* casa*/
+  {nome: "Porta carta igienica", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/portacartaigienica.jpg",""], descrizione: "" },
+  {nome: "Porta uova", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/portauova.png",""], descrizione: "" },
+  {nome: "Porta scopa", categoria: "Casa", prezzo: "€ ", foto: ["immagini_stampe/scopa.jpg",""], descrizione: "" },
+     
+  /* fai da te*/
+  {nome: "Box modulare", categoria: "Fai fa te", prezzo: "€... ", foto: ["immagini_stampe/bbox.jpg"], descrizione: "" },
+  
+  /*smoke*/
+  {nome: "Stand porta clipper", categoria: "smoke", prezzo: "5€ ", foto: ["immagini_stampe/portaclipper.jpeg",""], descrizione: "" },
+  /* disegni*/
+  {nome: "Disegno1", categoria: "Disegni", prezzo: "€ ...", foto: ["immagini_stampe/dis1.jpg","immagini_stampe/dis2.png"], descrizione: "" },
+    
+  /* altro*/
+  {nome: "Vinile", categoria: "Altro", prezzo: "€ ", foto: ["immagini_stampe/vinile.jpg",""], descrizione: "" },
+  ];
 
 const $ = id => document.getElementById(id);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -515,21 +565,46 @@ disegnaChips(); disegna();
 function apriModal(indice) {
   const p = prodottiCorrenti[indice];
   if (!p) return;
-
+  
   const gallery = document.getElementById("modal-gallery");
-
-  // Normalizza p.foto in un array, filtra i valori vuoti e genera l'HTML
-  const foto = (Array.isArray(p.foto) ? p.foto : [p.foto]).filter(f => f && f.trim());
-  gallery.innerHTML = foto.map(f => `<img src="${esc(f)}" alt="${esc(p.nome)}">`).join("");
-
-  // Descrizione e apertura del modal (queste due righe mancavano)
+  const btnPrev = document.getElementById("btn-prev");
+  const btnNext = document.getElementById("btn-next");
+  
+  if (Array.isArray(p.foto) && p.foto.length > 0) {
+    gallery.innerHTML = p.foto.map(f => `<img src="${esc(f)}">`).join('');
+    // Mostra i bottoni solo se c'è più di 1 foto nell'array
+    const mostraBottoni = p.foto.length > 1 ? "grid" : "none";
+    btnPrev.style.display = mostraBottoni;
+    btnNext.style.display = mostraBottoni;
+  } else if (typeof p.foto === "string" && p.foto.trim() !== "") {
+    gallery.innerHTML = `<img src="${esc(p.foto)}">`;
+    btnPrev.style.display = "none";
+    btnNext.style.display = "none";
+  } else {
+    gallery.innerHTML = '';
+    btnPrev.style.display = "none";
+    btnNext.style.display = "none";
+  }
+  
   document.getElementById("modal-desc").textContent = p.descrizione_lunga || p.descrizione;
   document.getElementById("modal").style.display = "grid";
 }
+
+// Nuova funzione per gestire lo scorrimento automatico al clic del pulsante
+function scorriGalleria(direzione) {
+  const gallery = document.getElementById("modal-gallery");
+  const larghezzaFoto = gallery.clientWidth; 
+  gallery.scrollBy({ left: direzione * larghezzaFoto, behavior: 'smooth' });
+}
 </script>
-<div id="modal" class="modal" onclick="this.style.display='none'">
+<<div id="modal" class="modal" onclick="this.style.display='none'">
   <div class="modal-content" onclick="event.stopPropagation()">
-    <div id="modal-gallery" class="gallery"></div>
+    <!-- Nuovo contenitore con i pulsanti -->
+    <div class="gallery-wrapper">
+      <button id="btn-prev" class="nav-btn left" onclick="scorriGalleria(-1)">&#10094;</button>
+      <div id="modal-gallery" class="gallery"></div>
+      <button id="btn-next" class="nav-btn right" onclick="scorriGalleria(1)">&#10095;</button>
+    </div>
     <p id="modal-desc"></p>
   </div>
 </div>
