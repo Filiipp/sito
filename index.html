@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>projectbE</title>
+<title>FiloLab</title>
 <meta name="description" content="Sfoglia i prodotti per categoria e richiedi informazioni con un tocco.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -257,7 +257,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 <header>
   <div class="wrap">
     <h1>
-      <span class="sr-only">projectbE</span>
+      <span class="sr-only">FiloLab</span>
       <svg class="print-title" id="printTitle" viewBox="0 0 800 260" aria-hidden="true">
         <defs>
           <clipPath id="ptClip"></clipPath>
@@ -267,8 +267,8 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
         </defs>
         <rect class="pt-bed" id="ptBed"/>
         <g clip-path="url(#ptClip)">
-          <text class="pt-fill" id="ptFill" x="400" y="170" text-anchor="middle">projectbE</text>
-          <text class="pt-fill-lines" id="ptFillLines" x="400" y="170" text-anchor="middle">projectbE</text>
+          <text class="pt-fill" id="ptFill" x="400" y="170" text-anchor="middle">FiloLab</text>
+          <text class="pt-fill-lines" id="ptFillLines" x="400" y="170" text-anchor="middle">FiloLab</text>
         </g>
         <g id="ptBeamG"><rect class="pt-beam" id="ptBeam" height="5" rx="2.5"/></g>
         <g id="ptGantry">
@@ -379,7 +379,7 @@ footer{border-top:1px solid var(--line);padding:28px 0 40px;color:var(--muted);f
 
   // aspetta il caricamento del font, altrimenti le misure del testo sono sbagliate
   const fontPronto = document.fonts && document.fonts.load
-    ? document.fonts.load('800 120px "Bricolage Grotesque"', 'projectbE')
+    ? document.fonts.load('800 120px "Bricolage Grotesque"', 'FiloLab')
     : Promise.resolve();
   fontPronto.catch(()=>{}).then(()=> document.fonts ? document.fonts.ready : null).then(setup);
 })();
